@@ -1,8 +1,8 @@
 # Web4
 
-Учебное приложение на `Spring Boot + Vue.js`:
+`Spring Boot + Vue.js`:
 - backend: REST API + H2 + Spring Data JPA;
-- frontend: Vue 3, 2 страницы (стартовая и основная);
+- frontend: Vue 3, 2 страницы;
 - авторизация через HTTP-сессию;
 - проверка точки на попадание в область и история результатов.
 
