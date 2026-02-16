@@ -3,7 +3,7 @@
 `Spring Boot + Vue.js`:
 - backend: REST API + H2 + Spring Data JPA;
 - frontend: Vue 3, 2 страницы;
-- авторизация через HTTP-сессию;
+- auth через HTTP-сессию;
 - проверка точки на попадание в область и история результатов.
 
 ## Требования
