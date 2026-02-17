@@ -129,6 +129,10 @@ export default {
   data() {
     return {
       currentUser: localStorage.getItem('username') || '',
+      xMin: -3,
+      xMax: 5,
+      yMin: -3,
+      yMax: 3,
       xValues: [-3, -2, -1, 0, 1, 2, 3, 4, 5],
       rValues: [-3, -2, -1, 0, 1, 2, 3, 4, 5],
       form: {
@@ -160,8 +164,8 @@ export default {
       if (this.normalizedY === null) {
         return 'Y должен быть числом'
       }
-      if (this.normalizedY < -3 || this.normalizedY > 3) {
-        return 'Y должен быть в диапазоне от -3 до 3'
+      if (this.normalizedY < this.yMin || this.normalizedY > this.yMax) {
+        return `Y должен быть в диапазоне от ${this.yMin} до ${this.yMax}`
       }
       return ''
     },
@@ -175,7 +179,7 @@ export default {
       return ''
     },
     canSubmit() {
-      return !this.yError && !this.rError
+      return !this.yError && !this.rError && this.form.x >= this.xMin && this.form.x <= this.xMax
     }
   },
   watch: {
@@ -243,9 +247,7 @@ export default {
       this.submitting = true
 
       try {
-        const response = await pointService.addPoint(this.form.x, this.normalizedY, this.form.r)
-        this.points = [response.data, ...this.points]
-        this.drawGraph()
+        await this.submitPoint(this.form.x, this.normalizedY, this.form.r)
       } catch (error) {
         this.statusMessage = extractErrorMessage(error, 'Не удалось проверить точку')
       } finally {
@@ -275,6 +277,12 @@ export default {
         await this.$router.push('/')
       }
     },
+    async submitPoint(x, y, r) {
+      const response = await pointService.addPoint(x, y, r)
+      this.points = [response.data, ...this.points]
+      this.drawGraph()
+      return response
+    },
     handleCanvasClick(event) {
       const r = Number(this.form.r)
       if (!Number.isFinite(r) || r <= 0) {
@@ -290,19 +298,26 @@ export default {
       const canvasX = event.clientX - rect.left
       const canvasY = event.clientY - rect.top
 
-      const x = (canvasX - center) / scale
-      const y = (center - canvasY) / scale
+      const x = Number(((canvasX - center) / scale).toFixed(3))
+      const y = Number(((center - canvasY) / scale).toFixed(3))
 
-      this.form.x = this.snapToAllowedX(x)
+      if (x < this.xMin || x > this.xMax || y < this.yMin || y > this.yMax) {
+        this.statusMessage = `Координаты клика должны быть в диапазонах X:[${this.xMin}, ${this.xMax}], Y:[${this.yMin}, ${this.yMax}]`
+        return
+      }
+
       this.form.y = y.toFixed(2)
       this.touchY = true
+      this.statusMessage = ''
 
-      this.checkPoint()
-    },
-    snapToAllowedX(value) {
-      return this.xValues.reduce((closest, current) => {
-        return Math.abs(current - value) < Math.abs(closest - value) ? current : closest
-      })
+      this.submitting = true
+      this.submitPoint(x, y, r)
+        .catch((error) => {
+          this.statusMessage = extractErrorMessage(error, 'Не удалось отправить точку по клику')
+        })
+        .finally(() => {
+          this.submitting = false
+        })
     },
     drawGraph() {
       const canvas = this.$refs.canvas

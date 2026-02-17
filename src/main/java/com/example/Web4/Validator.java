@@ -12,7 +12,8 @@ public class Validator {
         return Float.isFinite(x)
                 && Float.isFinite(y)
                 && Float.isFinite(r)
-                && isAllowedRadioValue(x)
+                && x >= -3.0f
+                && x <= 5.0f
                 && y >= -3.0f
                 && y <= 3.0f
                 && isAllowedRadioValue(r)
